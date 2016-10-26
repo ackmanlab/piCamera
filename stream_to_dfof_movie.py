@@ -5,11 +5,11 @@ stream_to_df0f_movie.py
 
 Default parameters save an .avi as a time stamped file ('YYYYMMDD_HHmm_dfof.avi').
 
-Trackbars change the dfof colormap boundries.  Each trackbar number coresponds to half a standard
+Trackbars change the dfof colormap boundaries.  Each trackbar number coresponds to half a standard
     deviation of the dfof movie calculation.  Low end trackbar is divided between 8 divisions 
     (max 4 standard deviations from mean), whereas high end is divided between 16 divisions 
-    (max 8 standard deviations from mean).  Low end moved right sets boundry closer to the 
-    mean.  High end moved left sets boundry closer to the mean.
+    (max 8 standard deviations from mean).  Low end moved right sets boundary closer to the 
+    mean.  High end moved left sets boundary closer to the mean.
 
 Keystrokes for controlling the recording vs streaming:
     r = start/stop record
@@ -40,7 +40,7 @@ ap.add_argument("-p", "--picamera", type=int, default=-1,
                 help="whether or not the Raspberry Pi camera should be used")
 ap.add_argument("-f", "--fps", type=int, default=15,
                 help="FPS of output video")
-ap.add_argument("-c", "--codec", type=str, default="XVID",
+ap.add_argument("-c", "--codec", type=str, default="MJPG", #XVID codec works on linux, not on apple.  MJPG works on both.
                 help="codec of output video")
 ap.add_argument("-w", "--width", type=int, default=600,
                 help="width size; height will be determined to keep proper frame ratio")
