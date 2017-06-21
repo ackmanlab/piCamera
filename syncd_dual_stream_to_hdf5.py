@@ -9,7 +9,7 @@ Trackbars change the dfof colormap boundaries.  Each trackbar number coresponds 
     (max 8 standard deviations from mean).  Low end moved right sets boundary closer to the 
     mean.  High end moved left sets boundary closer to the mean.
 Keystrokes for controlling the recording vs streaming:
-    r = start/stop record
+    r = start/stop record tsets
     esc = exit from while loop
 Written by: Brian Mullen
 '''
