@@ -98,9 +98,12 @@ while i < n:
      A [i,:,:]= gray
      i += 1
 
+A = A.astype("float32", copy = False)
 sz = A.shape
-A2 = np.reshape(A, (sz[0], A.size/sz[0])) 
+A2 = np.reshape(A, (sz[0], int(A.size/sz[0])))
+
 frameMean = np.mean(A2,axis=0,dtype="float32")
+
 A2 = A2.astype("float32", copy=False)
 
 for i in range(sz[0]):
@@ -169,9 +172,9 @@ while True:
         cv2.imshow(WindowName + "_RECORDING", output)
 
     #write the output frame to file
-    if (i % 100) == 0:
-        print("Time passed since streaming: %s sec" % (time.time() - rec_time))
-        print("Expected time from iterations: %s sec" % ((i-n)/args["fps"]))
+    # if (i % 100) == 0:
+    #     print("Time passed since streaming: %s sec" % (time.time() - rec_time))
+    #     print("Expected time from iterations: %s sec" % ((i-n)/args["fps"]))
 
 
     key = cv2.waitKey(1) & 0xFF
