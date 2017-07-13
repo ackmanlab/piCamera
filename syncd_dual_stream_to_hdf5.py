@@ -26,31 +26,43 @@ import time
 import wholeBrain as wb
 from hdf5manager import *
 import threading
-
-start_time = time.time()
-today = time.localtime()
-timeString  = time.strftime("%Y%m%d", today)
-
-fnm = timeString[2:].upper()
-path = '/home/ackmanadmin/Documents/piCamera/data/' + fnm + '.hdf5'
+import os
 
 # construct the arguments parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-o", "--output", default = fnm,
-                help="path to output video file")
 ap.add_argument("-w", "--width", type=int, default=600,
                 help="width size; height will be determined to keep proper frame ratio")
 ap.add_argument("-l", "--length", type = float, default = 1,
                 help="desired video length in minutes")
 ap.add_argument("-f", "--fps", type=int, default=20,
                 help="FPS of output video")
-ap.add_argument("-s", "--sync", type = bool, #default = False,
-                help="Communicate with a server?")
+ap.add_argument("-s", "--setting", type = bool, default = False,
+                help="Change camera settings")
 ap.add_argument("-i", "--IPaddress", type = str, default = '',
                 help="IP address for TCP connection")
 ap.add_argument("-p", "--PORT", type = int, default = 8936,
                 help="Port to bind TCP/IP or UDP connection")
 args = vars(ap.parse_args())
+
+def newFile():
+    start_time = time.time()
+    today = time.localtime()
+    timeString  = time.strftime("%Y%m%d", today)
+
+    fnm = timeString[2:].upper()
+    path = '/home/brian/Documents/data/' + fnm
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print("Making new directory.")
+
+    i = 1
+    while os.path.exists(path + '/' + fnm + '_%02d.hdf5' % i):
+        i += 1
+
+    fnm_save = path + '/' + fnm + '_%02d.hdf5' % i
+
+    return fnm_save
 
 #Regulates frame rate
 def fpsManager(t0, fps, verbose = False):
@@ -71,6 +83,7 @@ def fpsManager(t0, fps, verbose = False):
         to -= timer() - t0 - td
         print("Warning: Loop speed is slower than desired FPS by {0} sec".format(round(1/fps - ta, 4)))
 
+
 def singleFrame():
     frame1 = vs1.read()
     frame1 = imutils.resize(frame1, args["width"])
@@ -86,20 +99,19 @@ def singleFrame():
 
     return gray1, gray2
 
-sync = args['sync']
-print ('Sync: ', sync)
+host = args["IPaddress"]
+port = args["PORT"]
 
-if args["sync"] == True:
-    host = args["IPaddress"]
-    port = args["PORT"]
-    
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # s.connect((host, port))
-    s.bind((host, port))
-    print ("UDP socket bound to %s" %(port))
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# s.connect((host, port))
+s.bind((host, port))
+print ("UDP socket bound to %s" %(port))
 
 #initialize the video stream and allow the camera sensor to warmup
 print("Warming up camera")
+
+if args["setting"]:
+    os.system('qv4l2')
 
 vs1 = WebcamVideoStream(src=0).start()
 vs2 = WebcamVideoStream(src=1).start()
@@ -111,36 +123,38 @@ fps = args["fps"]
 frame1 = vs1.read()
 frame1 = imutils.resize(frame1, args["width"])
 (h, w) = frame1.shape[:2]
-numframe = fps * args['length'] * 60
+numframe = int(fps * args['length'] * 60)
 ts = None
 toverflow = 0
 record = False
 
 #Allocate memory on HD
+fnm_save = newFile()
 print("Allocating Memory")
-f = hdf5manager(path)
+f = hdf5manager(fnm_save)
 f.save({'data_f': np.zeros((numframe, h, w), dtype=np.uint8)})
 f.save({'data_b': np.zeros((numframe, h, w), dtype=np.uint8)})
+f.save({'fps':np.zeros((numframe), dtype=np.float32)})
 f.open()
 
 print("Initialize streaming")
-time_stamp = np.zeros(numframe, dtype=np.float32)
+# time_stamp = np.zeros(numframe, dtype=np.float32)
 n = 0
 
 while True:
     t0 = timer()
     gray1, gray2 = singleFrame()
     if record == True:
-        if args["sync"] == True: 
-            data, addr = s.recvfrom(1024)
-            n = int(float(data.decode('utf-8')))
+        data, addr = s.recvfrom(1024)
+        n = int(float(data.decode('utf-8')))
 
-        if args["sync"]  == False:
-            fpsManager(t0, fps, verbose = False)
-            n += 1
+        # if args["sync"]  == False:
+        #     fpsManager(t0, fps, verbose = False)
+        #     n += 1
         
         f.f['data_f'][n] = gray1
         f.f['data_b'][n] = gray2
+        f.f['fps'][n] = timer()
 
         if (n % 10) == 0:
             print("Average frames per sec: {0} frames/sec".format(10/(timer() - rec_time)))

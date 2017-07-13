@@ -37,7 +37,7 @@ today = time.localtime()
 timeString  = time.strftime("%Y%m%d", today)
 
 fnm = timeString[2:].upper()
-path = '/home/ackmanadmin/Documents/piCamera/data/' + fnm
+path = '/home/brian/Documents/data/' + fnm
 
 if not os.path.exists(path):
     os.makedirs(path)
