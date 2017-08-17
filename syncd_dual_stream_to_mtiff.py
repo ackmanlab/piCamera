@@ -51,7 +51,7 @@ def newFile():
     timeString  = time.strftime("%Y%m%d", today)
 
     fnm = timeString[2:].upper()
-    path = '/home/brian/Documents/data/' + fnm
+    path = '/home/ackmanadmin/Videos/' + fnm
 
     #check to see if a file exists for the day on D drive
     if not os.path.exists(path):
@@ -60,7 +60,7 @@ def newFile():
 
     #Get the next filename in sequence for saving
     i = 1
-    while os.path.exists(path + '/' + fnm + "_%02d-0000.tif" % i):
+    while os.path.exists(path + '/' + fnm + "_%02d_c1-0000.tif" % i):
         i += 1
 
     fnm_save = (path + '/' + fnm + '_%02d' % i)
@@ -111,13 +111,16 @@ s.bind((host, port))
 print ("UDP socket bound to %s" %(port))
 
 #initialize the video stream and allow the camera sensor to warmup
-print("Warming up camera")
+print("\nWarming up camera and allocating memory\n-----------------------")
 
 if args["setting"]:
-    os.system('qv4l2')
+    print("Opening camera settings GUI for camera 1")
+    os.system('qv4l2 -d /dev/video0')
+    print("Opening camera settings GUI for camera 2")
+    os.system('qv4l2 -d /dev/video1')
 
-vs1 = WebcamVideoStream(src=1).start()
-vs2 = WebcamVideoStream(src=2).start()
+vs1 = WebcamVideoStream(src=0).start()
+vs2 = WebcamVideoStream(src=1).start()
 
 time.sleep(2.0)
 
@@ -126,36 +129,32 @@ fps = args["fps"]
 frame1 = vs1.read()
 frame1 = imutils.resize(frame1, args["width"])
 (h, w) = frame1.shape[:2]
-print(h, w)
 numframe = int(fps * args['length'] * 60)
-print(numframe)
+tmem = (numframe * h * w)/(1024**2) # approxamate total memory in megabytes
+print("Size of expected recording: ", numframe, h, w)
+print("If recording is chosen, this will require {0} MGs of RAM.".format(tmem))
 ts = None
 toverflow = 0
 record = False
 
 #Allocate memory on HD
-print("Allocating Memory")
+fnm_save = newFile()
 c1 = np.zeros((numframe, h, w), dtype=np.uint8)
 c2 = np.zeros((numframe, h, w), dtype=np.uint8)
-
-fnm_save = newFile()
 tlog_fnm = (fnm_save + '_tlog.txt')
-print('Saving file to :', tlog_fnm)
+print('Saving time log file to :', tlog_fnm)
 tlog = open(tlog_fnm, 'w')
-print("Initialize streaming")
-# time_stamp = np.zeros(numframe, dtype=np.float32)
-n = 0
 
+print("\nInitialize streaming\n-----------------------")
+n = 0
 while True:
     t0 = timer()
     gray1, gray2 = singleFrame()
     if record == True:
         data, addr = s.recvfrom(1024)
         n = int(float(data.decode('utf-8')))
-
-        # if args["sync"]  == False:
-        #     fpsManager(t0, fps, verbose = False)
-        #     n += 1
+        if n == 0:
+            print("Starting recording")
         
         c1[n] = gray1
         c2[n] = gray2
@@ -172,7 +171,7 @@ while True:
     if key == ord('r'): #go to recording component
         if record == False:
             record = True
-            print("Starting Recording")
+            print("Waiting for trigger")
             rec_time = timer()
         elif record == True:
             record = False
@@ -189,7 +188,7 @@ if record == True:
         wb.saveFile(fnm_save + '_c1-%04d.tif' % n , c1[n*(div):(n+1)*(div)])
         wb.saveFile(fnm_save + '_c2-%04d.tif' % n , c2[n*(div):(n+1)*(div)])
 
-print("Shutting down")
+print("\nShutting down\n-----------------------")
 tlog.close()
 vs1.stop()
 vs2.stop()
