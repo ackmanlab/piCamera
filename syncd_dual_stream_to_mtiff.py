@@ -51,11 +51,13 @@ def newFile():
     timeString  = time.strftime("%Y%m%d", today)
 
     fnm = timeString[2:].upper()
-    path = '/home/ackmanadmin/Videos/' + fnm
+    path = '/home/ackmanlab/Videos/' + fnm
+    # os.chmod(path[:-6], 0o777)
 
     #check to see if a file exists for the day on D drive
     if not os.path.exists(path):
         os.makedirs(path)
+        # os.chmod(path, 0o777)
         print('Making new directory...\n')
 
     #Get the next filename in sequence for saving
@@ -68,36 +70,36 @@ def newFile():
     return fnm_save
 
 #Regulates frame rate
-def fpsManager(t0, fps, verbose = False):
-    ta = timer() - t0
-    td = 1/(1.1*fps)
-    to = 0
-    if verbose == True:
-        print("Actual time:", round(ta, 4), "secs")
-        print("Desired time:", round(td, 4), "secs")
-        print("----------------------------------------")
-    if ta <= td:
-        ts = round(td - ta + to, 3)
-        if verbose == True:
-            print("Sleep time:", round(ts, 4), "secs")
-        time.sleep(ts)
-        to += timer() - t0 - td
-    if ta > td:
-        to -= timer() - t0 - td
-        print("Warning: Loop speed is slower than desired FPS by {0} sec".format(round(1/fps - ta, 4)))
+# def fpsManager(t0, fps, verbose = False):
+#     ta = timer() - t0
+#     td = 1/(1.1*fps)
+#     to = 0
+#     if verbose == True:
+#         print("Actual time:", round(ta, 4), "secs")
+#         print("Desired time:", round(td, 4), "secs")
+#         print("----------------------------------------")
+#     if ta <= td:
+#         ts = round(td - ta + to, 3)
+#         if verbose == True:
+#             print("Sleep time:", round(ts, 4), "secs")
+#         time.sleep(ts)
+#         to += timer() - t0 - td
+#     if ta > td:
+#         to -= timer() - t0 - td
+#         print("Warning: Loop speed is slower than desired FPS by {0} sec".format(round(1/fps - ta, 4)))
 
 
-def singleFrame():
+def singleFrame(vis_during_rec = True):
     frame1 = vs1.read()
     frame1 = imutils.resize(frame1, args["width"])
     gray1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
-    if record == False:
+    if record == False or vis_during_rec == True:
         cv2.imshow('WebCam1: press r to record, q to quit', gray1)
 
     frame2 = vs2.read()
     frame2 = imutils.resize(frame2, args["width"])
     gray2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
-    if record == False:
+    if record == False or vis_during_rec == True:
         cv2.imshow('WebCam2: press r to record, q to quit', gray2)
 
     return gray1, gray2
@@ -111,38 +113,39 @@ s.bind((host, port))
 print ("UDP socket bound to %s" %(port))
 
 #initialize the video stream and allow the camera sensor to warmup
-print("\nWarming up camera and allocating memory\n-----------------------")
 
 if args["setting"]:
-    print("Opening camera settings GUI for camera 1")
+    print("\nOpening camera settings GUI for camera 1")
     os.system('qv4l2 -d /dev/video0')
-    print("Opening camera settings GUI for camera 2")
+    print("\nOpening camera settings GUI for camera 2")
     os.system('qv4l2 -d /dev/video1')
+
+print("\nWarming up camera and allocating memory\n-----------------------")
 
 vs1 = WebcamVideoStream(src=0).start()
 vs2 = WebcamVideoStream(src=1).start()
-
+# vs1 = VideoStream(src=0).start()
+# vs2 = VideoStream(src=1).start()
 time.sleep(2.0)
 
 #initialize the FourCC, video writer, dimensions of the frame, and zeros array
 fps = args["fps"]
-frame1 = vs1.read()
-frame1 = imutils.resize(frame1, args["width"])
+record = False
+frame1, _ = singleFrame()
 (h, w) = frame1.shape[:2]
 numframe = int(fps * args['length'] * 60)
 tmem = (numframe * h * w)/(1024**2) # approxamate total memory in megabytes
 print("Size of expected recording: ", numframe, h, w)
 print("If recording is chosen, this will require {0} MGs of RAM.".format(tmem))
-ts = None
-toverflow = 0
-record = False
+# ts = None
+# toverflow = 0
 
 #Allocate memory on HD
 fnm_save = newFile()
 c1 = np.zeros((numframe, h, w), dtype=np.uint8)
 c2 = np.zeros((numframe, h, w), dtype=np.uint8)
 tlog_fnm = (fnm_save + '_tlog.txt')
-print('Saving time log file to :', tlog_fnm)
+print('\nSaving time log file to :', tlog_fnm)
 tlog = open(tlog_fnm, 'w')
 
 print("\nInitialize streaming\n-----------------------")
