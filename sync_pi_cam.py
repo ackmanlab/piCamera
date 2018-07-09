@@ -85,27 +85,26 @@ def pulseAll(GPIOlist, dur):
     for i, pin in enumerate(GPIOlist):
         pi.write(pin, 0) # low
 
-GPIOlist = [10, # CamAquire
-            23, # LED 1 Blue light
-            12, # LED 2 Blue light
-            13, # LED 3 IR light
-            26, # LED 4 IR light 
-            5, # piCam 1 TTL
-            4, # piCam 2 TTL
-            24, # cMOS TTL
-            10]  # stimulation            ]
+camAquire = 10  
+led1Blue = 23  
+led2Blue = 12  
+led3IR = 13  
+led4IR  = 26  
+piCam1 = 5  
+piCam2 = 4  
+cMOS = 24  
+stimulation = 10
 
 print('Warming up lights')
-pi.write(GPIOlist[4], 1)
-pi.write(GPIOlist[5], 1)
-time.sleep(5
-)
+pi.write(led3IR, 1)
+pi.write(led4IR, 1)
+time.sleep(5)
 
 t0 = timer()
 print('Triggering camera start')
 for i in range(5):
-    pulse(GPIOlist[6], 0.01)
-    pulse(GPIOlist[7], 0.01)
+    pulse(cMOS, 0.01)
+    pulse(piCam2, 0.01)
 
 time.sleep(bodyonlytime)
 print('Bod cam only ' + str(timer() - t0))
@@ -113,16 +112,16 @@ print('Bod cam only ' + str(timer() - t0))
 print('Turning on lights and triggering cMOS camera')
 #for loop sending information
 t1 = timer()
-pi.write(GPIOlist[0], 1) # Cam Aquire
-pi.write(GPIOlist[1], 1)
-pi.write(GPIOlist[2], 1)
+pi.write(camAquire, 1) # Cam Aquire
+pi.write(led1Blue, 1)
+pi.write(led2Blue, 1)
 try:
     j = 1
     for i, n in enumerate(ran[:-1]):
         #send TTL
         if args["fstim"] is not None:
             if ((i%(fac)) == 0) and ((i%(stim_fac)) == 0):
-                pulseAll(GPIOlist[7:], 0.005) # Trigger for aquisition
+                pulseAll([cMOS, stimulation], 0.005) # Trigger for aquisition
                 tsleep = ran[i+j] - (timer() - t0)
                 if tsleep >= 0:
                     time.sleep(tsleep)
@@ -130,7 +129,7 @@ try:
                     j+=1
                     print('Dropped frame')
             elif (i%(fac)) == 0:
-                pulse(GPIOlist[7], 0.005) # Trigger for aquisition
+                pulse(cMOS, 0.005) # Trigger for aquisition
                 tsleep = ran[i+j] - (timer() - t0)
                 if tsleep >= 0:
                     time.sleep(tsleep)
@@ -140,7 +139,7 @@ try:
 
         else:
             if (i%(fac)) == 0:
-                pulse(GPIOlist[7], 0.005) # Trigger for aquisition
+                pulse(cMOS, 0.005) # Trigger for aquisition
                 tsleep = ran[i+j] - (timer() - t0)
                 if tsleep >= 0:
                     time.sleep(tsleep)
@@ -153,7 +152,7 @@ try:
     #     #send TTL
     #     if args["fstim"] is not None:
     #         if ((i%(fac)) == 0) and ((i%(stim_fac)) == 0):
-    #             pulseAll(GPIOlist[1:], 0.005) # Trigger for aquisition
+    #             pulseAll([piCam1, piCam2, cMOS, stimulation], 0.005) # Trigger for aquisition
     #             tsleep = ran[i+j] - (timer() - t0)
     #             if tsleep >= 0:
     #                 time.sleep(tsleep)
@@ -210,13 +209,7 @@ try:
 finally:
     print('brain camera time ' + str(timer()-t1) + ' sec(s)')
     print('total time pass ' + str(timer()-t0) + ' sec(s)')
-    for i in range(5):
-        pi.write(GPIOlist[i], 0)
-    # pi.write(GPIOlist[0], 0) # Cam Aquire
-    # pi.write(GPIOlist[1], 0)
-    # pi.write(GPIOlist[2], 0)
-    # pi.write(GPIOlist[3], 0)
-    # pi.write(GPIOlist[4], 0)
-    # print("Number of dropped frames: ", j-1)
+    for pin in [camAquire, led1Blue, led2Blue, led3IR, led4IR]:
+        pi.write(pin, 0)
     print("Shutting down.")
     pi.stop()
