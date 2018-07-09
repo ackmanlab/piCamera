@@ -76,7 +76,7 @@ if __name__ == '__main__':
         camera.start_preview()
         time.sleep(5) # sleep 5 seconds to allow fo  the camera to warm up
         print('Camera ready! Waiting for trigger...')
-        pi.wait_for_edge(12) # wait for trigger
+        pi.wait_for_edge(18) # wait for trigger
         print('Recording to ' + fnm)
         t0 = time.time()
         camera.start_recording(fnm)
