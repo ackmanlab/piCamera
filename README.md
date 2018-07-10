@@ -1,6 +1,2 @@
 # piCamera
-
-raspberry pi video aquisition library.
-
-MIT License
-
+raspberry pi video aquisition
