@@ -90,8 +90,8 @@ led1Blue = 23
 led2Blue = 12  
 led3IR = 13  
 led4IR  = 26  
-piCam1 = 5  
-piCam2 = 4  
+piCam1 = 17  
+piCam2 = 4 
 cMOS = 24  
 stimulation = 10
 
@@ -103,7 +103,7 @@ time.sleep(5)
 t0 = timer()
 print('Triggering camera start')
 for i in range(5):
-    pulse(cMOS, 0.01)
+    pulse(piCam1, 0.01)
     pulse(piCam2, 0.01)
 
 time.sleep(bodyonlytime)

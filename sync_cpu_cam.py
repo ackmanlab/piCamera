@@ -1,3 +1,9 @@
+'''
+To be used on the Raspberry Pi to regulate capture speeds.  
+
+This will send UDP and TTL pulses to a variety of devices to ensure syncronous recording.
+'''
+
 import pigpio
 from timeit import default_timer as timer
 import socket
@@ -10,7 +16,7 @@ ap.add_argument("-l", "--length", type = float, default = 1,
                 help="desired video length in minutes")
 ap.add_argument("-t", "--ttl", type = int, default = 10,
                 help="ttl frequency")
-ap.add_argument("-u", "--USB", type=int, default=30,
+ap.add_argument("-u", "--USB", type=int, default=20,
                 help="UDP frequency for USB cameras")
 ap.add_argument("-d", "--dict", type = argparse.FileType('r'),
                 nargs = 1, required = False,
@@ -26,8 +32,8 @@ lag = 0 #0.0002
 
 #define how the communication will occur through ethernet
 name = ['sUSB', 'sCMOS'] 
-hosts = ['128.114.78.96', '128.114.78.191']
-ports = [ 8936, 8940 ]
+hosts = ['10.42.0.1', '']
+ports = [8936, 8937]
 
 #calculating looping parameters
 if fpscMOS >= fpsUSB:
@@ -60,20 +66,19 @@ def pulse(GPIO, dur):
     pi.write(GPIO, 0) # low
 
 #initialize handles for TTL and UDP
-#sCMOS = setupServer(name[1], hosts[1], ports[1]) #UDP to CMOS CPU
+sCMOS = setupServer(name[1], hosts[1], ports[1]) #UDP to CMOS CPU
 sUSB = setupServer(name[0], hosts[0], ports[0]) #UDP to USB CPU
 pi = pigpio.pi() #TTL
 
 #for loop sending information
 t0 = timer()
-pi.write(12, 1) #light blue two
-pi.write(23, 1) #light blue one
+pi.write(23, 1) # Cam Aquire
 for i, n in enumerate(ran[:-1]):
     #send TTL
     if (i%(fac)) == 0:
-        pulse(24, 0.01)
+        pulse(24, 0.01) # Trigger for aquisition
         #send UDP to USB CPU
-        #sCMOS.sendto(str.encode(str(i//fac)), (hosts[1], ports[1]))
+        sCMOS.sendto(str.encode(str(i//fac)), (hosts[1], ports[1]))
     #send UDP to USB CPU
     sUSB.sendto(str.encode(str(i//1)), (hosts[0], ports[0]))
     if (i%100) == 0: 
@@ -84,10 +89,9 @@ for i, n in enumerate(ran[:-1]):
     tsleep = ran[i+1] - (timer() - t0) 
     time.sleep(tsleep)
 
-pi.write(12, 0)
 pi.write(23, 0)
 
 print("Shutting down.")
 pi.stop()
-#sCMOS.close()
+sCMOS.close()
 sUSB.close()
