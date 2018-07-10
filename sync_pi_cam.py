@@ -122,7 +122,7 @@ try:
         if args["fstim"] is not None:
             if ((i%(fac)) == 0) and ((i%(stim_fac)) == 0):
                 pulseAll([cMOS, stimulation], 0.005) # Trigger for aquisition
-                tsleep = ran[i+j] - (timer() - t0)
+                tsleep = ran[i+j] - (timer() - t1)
                 if tsleep >= 0:
                     time.sleep(tsleep)
                 else:
@@ -130,7 +130,7 @@ try:
                     print('Dropped frame')
             elif (i%(fac)) == 0:
                 pulse(cMOS, 0.005) # Trigger for aquisition
-                tsleep = ran[i+j] - (timer() - t0)
+                tsleep = ran[i+j] - (timer() - t1)
                 if tsleep >= 0:
                     time.sleep(tsleep)
                 else:
@@ -140,7 +140,7 @@ try:
         else:
             if (i%(fac)) == 0:
                 pulse(cMOS, 0.005) # Trigger for aquisition
-                tsleep = ran[i+j] - (timer() - t0)
+                tsleep = ran[i+j] - (timer() - t1)
                 if tsleep >= 0:
                     time.sleep(tsleep)
                 else:
