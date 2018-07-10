@@ -48,7 +48,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument("-f", "--fps", type=int, default=30,
         help="frame rate as frames per second")
-    ap.add_argument("-l", "--length", type=int, default=10,
+    ap.add_argument("-l", "--length", type=float, default=1,
         help="Movie length in minutes")
     args = vars(ap.parse_args())
 
@@ -59,6 +59,8 @@ if __name__ == '__main__':
     # maxError = 10 # in milliseconds, any frame with at least this much error will be discarded
     camRes = (640, 480)
     camera = PiCamera(resolution=camRes,framerate=frameRate)
+
+
     # camera.hflip = True # For upside-down camera
     # camera.vflip = True # For upside-down camera
     # rawCapture = PiRGBArray(camera, size=camRes) # for easier use with OpenCV
@@ -71,15 +73,17 @@ if __name__ == '__main__':
 
     try:
         print('Warming up camera')
-        # ticker = 0
-        camera.resolution = (640, 480)
+        camera.iso = 800
+        camera.color_effects = (128,128) # turn camera black and white
+        camera.awb_gains = (1,1)
         camera.start_preview()
         time.sleep(5) # sleep 5 seconds to allow fo  the camera to warm up
         print('Camera ready! Waiting for trigger...')
-        pi.wait_for_edge(12) # wait for trigger
+        pi.wait_for_edge(18) # wait for trigger
         print('Recording to ' + fnm)
         t0 = time.time()
-        camera.start_recording(fnm)
+        camera.exposure_mode = 'night'
+        camera.start_recording(fnm, quality=50)
         time.sleep(length)
         camera.stop_recording()
         print("Recording took " + str(np.around(time.time() - t0, 2)) + " sec(s)")
@@ -93,4 +97,5 @@ if __name__ == '__main__':
     finally:
           # writer.close()
           camera.stop_preview()
+#print
 
