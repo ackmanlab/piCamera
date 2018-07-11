@@ -73,7 +73,6 @@ if __name__ == '__main__':
 
     try:
         print('Warming up camera')
-        camera.iso = 800
         camera.color_effects = (128,128) # turn camera black and white
         camera.awb_gains = (1,1)
         camera.start_preview()
@@ -83,7 +82,7 @@ if __name__ == '__main__':
         print('Recording to ' + fnm)
         t0 = time.time()
         camera.exposure_mode = 'night'
-        camera.start_recording(fnm, quality=50)
+        camera.start_recording(fnm)
         time.sleep(length)
         camera.stop_recording()
         print("Recording took " + str(np.around(time.time() - t0, 2)) + " sec(s)")
