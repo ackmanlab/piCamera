@@ -72,8 +72,6 @@ if __name__ == '__main__':
     print('File will be saved at:\n', fnm)
 
     try:
-        print('Warming up camera')
-        camera.color_effects = (128,128) # turn camera black and white
         camera.awb_gains = (1,1)
         camera.start_preview()
         time.sleep(5) # sleep 5 seconds to allow fo  the camera to warm up
